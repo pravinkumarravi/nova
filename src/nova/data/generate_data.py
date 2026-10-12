@@ -49,6 +49,13 @@ INTENT_PATTERNS: Dict[str, List[str]] = {
         "good day",
         "salutations",
         "pleased to meet you",
+        "how are you",
+        "how are you doing",
+        "how are you today",
+        "how do you do",
+        "how is it going",
+        "how r u",
+        "how r u doing",
     ],
     "ASK_NAME": [
         "what is your name",
@@ -72,6 +79,8 @@ INTENT_PATTERNS: Dict[str, List[str]] = {
     "ASK_IDENTITY": [
         "who are you",
         "who're you",
+        "who r u",
+        "who r you",
         "what are you",
         "are you real",
         "are you a bot",
@@ -157,6 +166,9 @@ INTENT_PATTERNS: Dict[str, List[str]] = {
         "check today's date",
         "what is today's day and date",
         "tell me the date right now",
+        "today is",
+        "today is what",
+        "what is today",
     ],
     "ASK_MODEL_TYPE": [
         "what model are you",

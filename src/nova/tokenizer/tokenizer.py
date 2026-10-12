@@ -54,13 +54,30 @@ class SimpleTokenizer:
     def vocab_size(self) -> int:
         return len(self.vocabulary)
 
+    SLANG_MAP = {
+        r"\bu\b": "you",
+        r"\br\b": "are",
+        r"\bur\b": "your",
+        r"\bwho're\b": "who are",
+        r"\bhow're\b": "how are",
+        r"\bhow's\b": "how is",
+        r"\bwhat's\b": "what is",
+        r"\bwho's\b": "who is",
+        r"\bthx\b": "thanks",
+        r"\bpls\b": "please",
+        r"\bplz\b": "please",
+        r"\bya\b": "you",
+    }
+
     def normalize(self, text: str) -> str:
-        """Normalizes input string by trimming and optional lowercasing."""
+        """Normalizes input string by trimming, lowercasing, and expanding texting abbreviations."""
         if not text:
             return ""
         text = text.strip()
         if self.lowercase:
             text = text.lower()
+        for pattern, repl in self.SLANG_MAP.items():
+            text = re.sub(pattern, repl, text)
         return text
 
     def tokenize(self, text: str) -> List[str]:

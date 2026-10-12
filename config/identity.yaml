@@ -4,8 +4,8 @@ timezone: "Asia/Kolkata"
 
 responses:
   GREETING:
-    - "Hello! I am Nova. How can I help you?"
-    - "Hi there! I am Nova, an educational AI agent. How can I assist you today?"
+    - "Hello! I am doing well, thank you! I am Nova. How can I help you?"
+    - "Hi there! I am Nova, an educational AI agent running smoothly. How can I assist you today?"
   ASK_NAME:
     - "My name is Nova. I am a small AI agent trained to understand a limited set of English questions."
     - "I am called Nova."

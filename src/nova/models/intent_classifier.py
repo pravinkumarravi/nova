@@ -134,14 +134,14 @@ class RuleBasedBaselineClassifier:
         "ASK_CURRENT_TIME": ["time", "clock", "hour", "minute"],
         "ASK_CURRENT_DATE": ["date", "day", "today", "weekday", "month", "year"],
         "ASK_NAME": ["name", "call you", "called"],
-        "ASK_IDENTITY": ["who are you", "who're you", "what are you", "introduce", "describe yourself"],
+        "ASK_IDENTITY": ["who are you", "who're you", "who r u", "who r you", "what are you", "introduce", "describe yourself"],
         "ASK_HUMAN": ["human", "person", "living human", "flesh and blood"],
         "ASK_CAPABILITIES": ["what can you do", "capabilities", "features", "skills", "help me with"],
         "ASK_MODEL_TYPE": ["architecture", "transformer", "neural", "parameters", "model are you", "how were you built"],
         "ASK_SUPPORTED_TOPICS": ["topics", "what questions", "what can i ask", "supported"],
         "ASK_OFFLINE_STATUS": ["offline", "internet", "cloud", "locally", "local machine"],
-        "GREETING": ["hello", "hi", "hey", "morning", "afternoon", "evening", "greetings", "howdy"],
-        "THANKS": ["thank", "thanks", "appreciate"],
+        "GREETING": ["hello", "hi", "hey", "morning", "afternoon", "evening", "greetings", "howdy", "how are you", "how r u", "how do you do"],
+        "THANKS": ["thank", "thanks", "appreciate", "thx"],
         "GOODBYE": ["bye", "goodbye", "farewell", "see you"],
     }
 
