@@ -1,7 +1,7 @@
 """Lightweight multi-threaded HTTP server supporting Server-Sent Events (SSE) streaming for Nova."""
 
 import json
-from http.server import HTTPServer, SimpleHTTPRequestHandler
+from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 import mimetypes
 from pathlib import Path
 import sys
@@ -139,8 +139,13 @@ class NovaHTTPRequestHandler(SimpleHTTPRequestHandler):
             self.send_header("Cache-Control", "no-cache")
             self.end_headers()
             self.wfile.write(content)
+        except (BrokenPipeError, ConnectionResetError):
+            pass
         except Exception as e:
-            self.send_error(500, f"Error reading file: {e}")
+            try:
+                self.send_error(500, f"Error reading file: {e}")
+            except Exception:
+                pass
 
     def send_json_info(self) -> None:
         try:
@@ -172,12 +177,17 @@ class NovaHTTPRequestHandler(SimpleHTTPRequestHandler):
             self.send_header("Content-Length", str(len(body)))
             self.end_headers()
             self.wfile.write(body)
+        except (BrokenPipeError, ConnectionResetError):
+            pass
         except Exception as e:
-            err = json.dumps({"error": str(e)}).encode("utf-8")
-            self.send_response(500)
-            self.send_header("Content-Type", "application/json")
-            self.end_headers()
-            self.wfile.write(err)
+            try:
+                err = json.dumps({"error": str(e)}).encode("utf-8")
+                self.send_response(500)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(err)
+            except Exception:
+                pass
 
     def handle_stream_chat(self) -> None:
         """Streams Server-Sent Events (SSE) back to client."""
@@ -326,7 +336,8 @@ def run_server(host: str = "127.0.0.1", port: int = 8000) -> None:
     print("Models preloaded successfully.")
 
     server_address = (host, port)
-    httpd = HTTPServer(server_address, NovaHTTPRequestHandler)
+    httpd = ThreadingHTTPServer(server_address, NovaHTTPRequestHandler)
+    httpd.daemon_threads = True
     print(f"\n==================================================")
     print(f"  Nova Web UI running at: http://{host}:{port}")
     print(f"  Streaming SSE endpoint: http://{host}:{port}/api/chat/stream")
@@ -337,6 +348,9 @@ def run_server(host: str = "127.0.0.1", port: int = 8000) -> None:
         httpd.serve_forever()
     except KeyboardInterrupt:
         print("\nShutting down Nova Web UI server...")
+    except Exception as e:
+        print(f"\nServer error: {e}")
+    finally:
         httpd.server_close()
 
 
