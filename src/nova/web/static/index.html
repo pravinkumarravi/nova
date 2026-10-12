@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nova AI — Neural Language Model & Agent</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="brand-icon">
+          <div class="pulse-ring"></div>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>Nova Core</h1>
+          <span class="badge-online"><span class="dot"></span> Online (Local CPU)</span>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <label class="section-label">OPERATING MODE</label>
+        <div class="mode-toggle-group">
+          <button id="mode-agent-btn" class="mode-btn active" data-mode="agent">
+            <span class="mode-icon">🤖</span>
+            <div class="mode-meta">
+              <strong>Agent Mode</strong>
+              <small>Router, Tools & Guardrails</small>
+            </div>
+          </button>
+          <button id="mode-lm-btn" class="mode-btn" data-mode="lm">
+            <span class="mode-icon">🧠</span>
+            <div class="mode-meta">
+              <strong>Decoder LM</strong>
+              <small>Autoregressive Next-Token</small>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <!-- LM Controls Drawer (Visible in LM Mode) -->
+      <div class="sidebar-section" id="lm-settings" style="display: none;">
+        <label class="section-label">SAMPLING PARAMETERS</label>
+        <div class="slider-control">
+          <div class="slider-header">
+            <span>Temperature</span>
+            <span id="temp-val" class="slider-val">0.80</span>
+          </div>
+          <input type="range" id="temp-slider" min="0.0" max="1.5" step="0.05" value="0.80">
+        </div>
+        <div class="slider-control">
+          <div class="slider-header">
+            <span>Top-K Filtering</span>
+            <span id="topk-val" class="slider-val">5</span>
+          </div>
+          <input type="range" id="topk-slider" min="1" max="20" step="1" value="5">
+        </div>
+      </div>
+
+      <!-- Agent Controls Drawer -->
+      <div class="sidebar-section" id="agent-settings">
+        <label class="section-label">ROUTING CONFIDENCE</label>
+        <div class="slider-control">
+          <div class="slider-header">
+            <span>Rejection Threshold</span>
+            <span id="thresh-val" class="slider-val">0.65</span>
+          </div>
+          <input type="range" id="thresh-slider" min="0.30" max="0.95" step="0.05" value="0.65">
+        </div>
+      </div>
+
+      <!-- Model Specifications Card -->
+      <div class="sidebar-section">
+        <label class="section-label">SYSTEM TELEMETRY</label>
+        <div class="telemetry-card">
+          <div class="telemetry-row">
+            <span>Architecture</span>
+            <span class="highlight">Transformer (Pre-LN)</span>
+          </div>
+          <div class="telemetry-row">
+            <span>Decoder LM Params</span>
+            <span id="stat-lm-params">125,952</span>
+          </div>
+          <div class="telemetry-row">
+            <span>Intent Model Params</span>
+            <span id="stat-intent-params">120,652</span>
+          </div>
+          <div class="telemetry-row">
+            <span>LM Vocabulary</span>
+            <span id="stat-vocab">173 tokens</span>
+          </div>
+          <div class="telemetry-row">
+            <span>Timezone</span>
+            <span class="badge-tz">Asia/Kolkata</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tool Registry Status -->
+      <div class="sidebar-section">
+        <label class="section-label">ALLOWLISTED TOOLS</label>
+        <div class="tools-list">
+          <div class="tool-chip">
+            <span class="tool-dot"></span>
+            <code>get_current_time</code>
+          </div>
+          <div class="tool-chip">
+            <span class="tool-dot"></span>
+            <code>get_current_date</code>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="live-clock">
+          <span class="clock-label">IST Live Clock</span>
+          <span id="ist-clock">--:--:--</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Chat Workspace -->
+    <main class="chat-container">
+      <!-- Top Bar -->
+      <header class="chat-header">
+        <div class="header-status">
+          <div class="model-badge" id="current-mode-badge">
+            <span class="badge-indicator"></span>
+            <span id="mode-badge-label">Active: Agent Mode (Router + Tools)</span>
+          </div>
+          <span class="header-sub">Built from Scratch with PyTorch • Zero Pretrained Weights</span>
+        </div>
+        <div class="header-actions">
+          <button id="clear-chat-btn" class="btn-secondary" title="Clear conversation">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+            </svg>
+            Clear
+          </button>
+        </div>
+      </header>
+
+      <!-- Message History Scroll Area -->
+      <div class="messages-viewport" id="messages-viewport">
+        <!-- Welcome Banner -->
+        <div class="welcome-card" id="welcome-card">
+          <div class="welcome-header">
+            <div class="welcome-avatar">N</div>
+            <div>
+              <h2>Welcome to Nova</h2>
+              <p>A compact, inspectable educational English language model and agent built from first principles.</p>
+            </div>
+          </div>
+          <div class="quick-prompts">
+            <span class="prompt-hint">Try asking:</span>
+            <div class="pill-container">
+              <button class="prompt-pill" data-prompt="What is your name?">What is your name?</button>
+              <button class="prompt-pill" data-prompt="Who are you?">Who are you?</button>
+              <button class="prompt-pill" data-prompt="Are you a human?">Are you a human?</button>
+              <button class="prompt-pill" data-prompt="What can you do?">What can you do?</button>
+              <button class="prompt-pill" data-prompt="Can you tell me the time?">Can you tell me the time?</button>
+              <button class="prompt-pill" data-prompt="What is today's date?">What is today's date?</button>
+              <button class="prompt-pill" data-prompt="What is the capital of France?">What is the capital of France?</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chat messages inserted here dynamically -->
+        <div id="messages-list" class="messages-list"></div>
+      </div>
+
+      <!-- Input Area -->
+      <footer class="chat-input-bar">
+        <form id="chat-form" class="input-form">
+          <div class="input-wrapper">
+            <input 
+              type="text" 
+              id="user-input" 
+              class="user-input" 
+              placeholder="Type a question for Nova... (e.g. 'What time is it?' or 'Who are you?')" 
+              autocomplete="off"
+            />
+            <button type="submit" id="send-btn" class="send-btn" title="Send message">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+              </svg>
+            </button>
+          </div>
+        </form>
+        <div class="input-meta">
+          <span>Real-time SSE token streaming enabled • Asian/Kolkata timezone synchronized</span>
+        </div>
+      </footer>
+    </main>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

@@ -269,6 +269,11 @@ def cmd_info(args: argparse.Namespace) -> None:
         print("\nIntent Classifier: Not trained yet.")
 
 
+def cmd_web(args: argparse.Namespace) -> None:
+    from nova.web.server import run_server
+    run_server(host=args.host, port=args.port)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         prog="nova",
@@ -320,6 +325,11 @@ def main() -> None:
     # info
     subparsers.add_parser("info", help="Display model architecture and metadata")
 
+    # web
+    p_web = subparsers.add_parser("web", help="Start Nova Web UI with streaming response output")
+    p_web.add_argument("--host", default="127.0.0.1", help="Host interface to bind")
+    p_web.add_argument("--port", type=int, default=8000, help="Port to listen on")
+
     args = parser.parse_args()
 
     if not args.command:
@@ -336,6 +346,7 @@ def main() -> None:
         "chat": cmd_chat,
         "generate-lm": cmd_generate_lm,
         "info": cmd_info,
+        "web": cmd_web,
     }
 
     fn = dispatch.get(args.command)
