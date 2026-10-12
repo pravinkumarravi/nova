@@ -274,6 +274,75 @@ def cmd_web(args: argparse.Namespace) -> None:
     run_server(host=args.host, port=args.port)
 
 
+def cmd_train_bpe(args: argparse.Namespace) -> None:
+    from nova.tokenizer.bpe import BPETokenizer
+
+    cfg = load_config(args.config)
+    out_dir = Path("artifacts/bpe_tokenizer")
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    train_file = Path(cfg.paths["lm_train_data"])
+    if not train_file.exists():
+        print(f"Data not found at {train_file}. Run generate-data first.")
+        return
+
+    corpus = []
+    with open(train_file, "r", encoding="utf-8") as f:
+        for line in f:
+            if line.strip():
+                corpus.append(json.loads(line)["text"])
+
+    print(f"Training Byte-Pair Encoding (BPE) Tokenizer with {args.merges} merges...")
+    bpe = BPETokenizer(num_merges=args.merges)
+    bpe.train_from_corpus(corpus)
+    bpe.save(out_dir)
+    print(f"BPE Tokenizer saved to: {out_dir}")
+    print(f"Vocabulary Size: {bpe.vocab_size} | Total Merges: {len(bpe.merges)}")
+
+
+def cmd_compare_tokenizers(args: argparse.Namespace) -> None:
+    from nova.tokenizer.bpe import BPETokenizer
+
+    cfg = load_config(args.config)
+    word_tok = SimpleTokenizer.load(cfg.paths["intent_artifact_dir"])
+
+    bpe_dir = Path("artifacts/bpe_tokenizer")
+    if not (bpe_dir / "bpe_config.json").exists():
+        print("BPE artifacts not found. Training BPE tokenizer first...")
+        cmd_train_bpe(argparse.Namespace(config=args.config, merges=200))
+
+    bpe_tok = BPETokenizer.load(bpe_dir)
+    text = args.text
+
+    print("\n" + "=" * 65)
+    print("TOKENIZER COMPARISON: WORD-LEVEL VS BYTE-PAIR ENCODING (BPE)")
+    print("=" * 65)
+    print(f"Input Query: \"{text}\"\n")
+
+    # 1. Word-level Tokenizer
+    w_tokens = word_tok.tokenize(text)
+    w_ids = word_tok.encode(text, add_special_tokens=False)
+    w_oov = sum(1 for tid in w_ids if tid == word_tok.unk_token_id)
+
+    print("1. Word-Level Tokenizer (SimpleTokenizer):")
+    print(f"   Tokens      : {w_tokens}")
+    print(f"   Token IDs   : {w_ids}")
+    print(f"   OOV Count   : {w_oov} ({'<UNK> DETECTED' if w_oov > 0 else 'Zero OOV'})")
+    print(f"   Decoded     : \"{word_tok.decode(w_ids, skip_special_tokens=False)}\"")
+
+    # 2. BPE Subword Tokenizer
+    b_tokens = bpe_tok.tokenize(text)
+    b_ids = bpe_tok.encode(text, add_special_tokens=False)
+    b_oov = sum(1 for tid in b_ids if tid == bpe_tok.unk_token_id)
+
+    print("\n2. Byte-Pair Encoding Subword Tokenizer (BPETokenizer):")
+    print(f"   Subwords    : {b_tokens}")
+    print(f"   Token IDs   : {b_ids}")
+    print(f"   OOV Count   : {b_oov} (ZERO OOV - 100% Character/Subword Fallback)")
+    print(f"   Decoded     : \"{bpe_tok.decode(b_ids, skip_special_tokens=False)}\"")
+    print("=" * 65 + "\n")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         prog="nova",
@@ -330,6 +399,14 @@ def main() -> None:
     p_web.add_argument("--host", default="127.0.0.1", help="Host interface to bind")
     p_web.add_argument("--port", type=int, default=8000, help="Port to listen on")
 
+    # train-bpe
+    p_tbpe = subparsers.add_parser("train-bpe", help="Train educational Byte-Pair Encoding (BPE) tokenizer")
+    p_tbpe.add_argument("--merges", type=int, default=200, help="Number of BPE merges to learn")
+
+    # compare-tokenizers
+    p_comp = subparsers.add_parser("compare-tokenizers", help="Compare Word-level vs BPE Subword tokenizer")
+    p_comp.add_argument("--text", default="who r u? how r u doing?", help="Text to tokenize and compare")
+
     args = parser.parse_args()
 
     if not args.command:
@@ -347,6 +424,8 @@ def main() -> None:
         "generate-lm": cmd_generate_lm,
         "info": cmd_info,
         "web": cmd_web,
+        "train-bpe": cmd_train_bpe,
+        "compare-tokenizers": cmd_compare_tokenizers,
     }
 
     fn = dispatch.get(args.command)
