@@ -201,6 +201,9 @@ python -m nova.cli generate-lm --prompt "User: What is your name?`nNova:"
 
 # 10. Display system and model parameter counts
 python -m nova.cli info
+
+# 11. Launch modern Web UI with real-time streaming output
+python -m nova.cli web --port 8000
 ```
 
 ---
