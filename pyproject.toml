@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nova"
+version = "0.1.0"
+description = "Nova - A small educational English language model and AI agent built from scratch"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "torch>=2.0.0",
+    "pyyaml>=6.0",
+    "pytest>=8.0.0",
+]
+
+[project.scripts]
+nova = "nova.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

@@ -1,0 +1,53 @@
+seed: 42
+
+paths:
+  data_dir: "data/generated"
+  artifacts_dir: "artifacts"
+  logs_dir: "logs"
+  lm_train_data: "data/generated/language_model_train.jsonl"
+  intent_train_data: "data/generated/intent_train.jsonl"
+  intent_val_data: "data/generated/intent_validation.jsonl"
+  intent_test_data: "data/generated/intent_test.jsonl"
+  manifest_path: "data/generated/dataset_manifest.json"
+  lm_artifact_dir: "artifacts/language_model"
+  intent_artifact_dir: "artifacts/intent_classifier"
+
+tokenizer:
+  pad_token: "<PAD>"
+  unk_token: "<UNK>"
+  bos_token: "<BOS>"
+  eos_token: "<EOS>"
+  min_freq: 1
+  lowercase: true
+
+language_model:
+  vocab_size: null  # populated from tokenizer vocabulary
+  d_model: 64
+  n_layers: 2
+  n_heads: 4
+  d_ff: 256
+  max_seq_len: 64
+  dropout: 0.1
+  learning_rate: 0.001
+  batch_size: 16
+  epochs: 35
+  grad_clip: 1.0
+
+intent_classifier:
+  vocab_size: null  # populated from tokenizer vocabulary
+  d_model: 64
+  n_layers: 2
+  n_heads: 4
+  d_ff: 256
+  max_seq_len: 32
+  dropout: 0.1
+  learning_rate: 0.001
+  batch_size: 16
+  epochs: 30
+  grad_clip: 1.0
+  confidence_threshold: 0.65
+
+agent:
+  identity_config: "config/identity.yaml"
+  confidence_threshold: 0.65
+  timezone: "Asia/Kolkata"
